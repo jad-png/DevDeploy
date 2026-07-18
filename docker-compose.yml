@@ -1,14 +1,59 @@
 services:
+  backend:
+    container_name: devdeploy-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - devdeploy-network
+
   postgres:
-    image: postgres:15
+    container_name: devdeploy-postgres
+    image: postgres:17-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: devuser
-      POSTGRES_PASSWORD: devpassword
-      POSTGRES_DB: devdeploy_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d devdeploy"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - devdeploy-network
 
   redis:
-    image: redis:alpine
+    container_name: devdeploy-redis
+    image: redis:8-alpine
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - devdeploy-network
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  devdeploy-network:
+    driver: bridge

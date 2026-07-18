@@ -1,5 +1,4 @@
-FROM golang:1.25-alpine AS builder
-
+FROM golang:1.26.4-alpine AS builder
 WORKDIR /app
 
 RUN apk add --no-cache git
@@ -21,6 +20,8 @@ WORKDIR /app
 RUN apk add --no-cache ca-certificates
 
 COPY --from=builder /app/devdeploy .
+
+RUN chmod +x /app/devdeploy
 
 EXPOSE 8080
 
