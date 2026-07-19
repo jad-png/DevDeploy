@@ -36,7 +36,7 @@ type DockerConfig struct {
 	Host string
 }
 
-func load() (*Config, error) {
+func Load() (*Config, error) {
 	app, err := loadAppConfig()
 	if err != nil {
 		return nil, fmt.Errorf("load app config: %w", err)

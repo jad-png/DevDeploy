@@ -1,5 +1,18 @@
 package main
 
+import (
+	"devdeply/internal/config"
+	"devdeply/internal/logger"
+	"log"
+)
+
 func main() {
-	println("hello world")
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	logg := logger.New(cfg.App)
+
+	logg.Error("test app")
 }
