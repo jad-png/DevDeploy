@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Config struct {
@@ -24,6 +25,15 @@ type DatabaseConfig struct {
 	User     string
 	Password string
 	Name     string
+
+	Pool PoolConfig
+}
+
+type PoolConfig struct {
+	MaxConns        int32
+	MinConns        int32
+	MaxConnIdleTime time.Duration
+	MaxConnLifetime time.Duration
 }
 
 type RedisConfig struct {
@@ -108,12 +118,38 @@ func loadDatabaseConfig() (DatabaseConfig, error) {
 		return DatabaseConfig{}, err
 	}
 
+	maxConn, err := getEnvAsInt("DB_MAX_CONNS")
+	if err != nil {
+		return DatabaseConfig{}, err
+	}
+
+	minConn, err := getEnvAsInt("DB_MIN_CONNS")
+	if err != nil {
+		return DatabaseConfig{}, err
+	}
+
+	idleTime, err := getEnvAsDuration("DB_MAX_CONN_IDLE_TIME")
+	if err != nil {
+		return DatabaseConfig{}, err
+	}
+
+	lifeTime, err := getEnvAsDuration("DB_MAX_CONN_LIFETIME")
+	if err != nil {
+		return DatabaseConfig{}, err
+	}
+
 	return DatabaseConfig{
 		Host:     host,
 		Port:     port,
 		User:     user,
 		Password: password,
 		Name:     name,
+		Pool: PoolConfig{
+			MaxConns:        int32(maxConn),
+			MinConns:        int32(minConn),
+			MaxConnIdleTime: idleTime,
+			MaxConnLifetime: lifeTime,
+		},
 	}, nil
 }
 
@@ -168,8 +204,22 @@ func getEnvAsInt(key string) (int, error) {
 	number, err := strconv.Atoi(value)
 
 	if err != nil {
-		return 0, fmt.Errorf("%s must be an integer", number)
+		return 0, fmt.Errorf("%s must be an integer", key)
 	}
 
 	return number, nil
+}
+
+func getEnvAsDuration(key string) (time.Duration, error) {
+	valueStr, err := getEnv(key)
+	if err != nil {
+		return 0, err
+	}
+
+	duration, err := time.ParseDuration(valueStr)
+	if err != nil {
+		return 0, err
+	}
+
+	return duration, err
 }
