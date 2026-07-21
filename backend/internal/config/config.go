@@ -37,9 +37,10 @@ type PoolConfig struct {
 }
 
 type RedisConfig struct {
-	Host string
-	Port int
-	//Password string
+	Host     string
+	Port     int
+	Password string
+	DB       int
 }
 
 type DockerConfig struct {
@@ -164,12 +165,18 @@ func loadRedisConfig() (RedisConfig, error) {
 		return RedisConfig{}, err
 	}
 
-	//password := os.Getenv("REDIS_PASSWORD")
+	password := os.Getenv("REDIS_PASSWORD")
+
+	db, err := getEnvAsInt("REDIS_DB")
+	if err != nil {
+		return RedisConfig{}, err
+	}
 
 	return RedisConfig{
-		Host: host,
-		Port: port,
-		//Password: password,
+		Host:     host,
+		Port:     port,
+		DB:       db,
+		Password: password,
 	}, nil
 }
 

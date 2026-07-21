@@ -9,14 +9,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type DatabaseConfig struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	Name     string
-}
-
 func New(ctx context.Context, cfg config.DatabaseConfig, logger *slog.Logger) (*pgxpool.Pool, error) {
 	logger.Info("Connecting to Postgres...")
 
